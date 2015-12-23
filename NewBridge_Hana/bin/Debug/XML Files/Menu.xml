@@ -1,0 +1,19 @@
+<Application>
+	<Menus>
+		<action type="add">
+			
+			<!--<Menu Checked="0" Enabled="1" FatherUID="2048" Image="" Position="2" String="Sales Order Line Closure"
+			Type="1" UniqueID="DABT_910">
+			</Menu>-->
+				<Menu Checked="0" Enabled="1" FatherUID="43525" Image="" Position="6" String="New Bridge"
+				Type="2" UniqueID="Mnu_NewBridge">
+				</Menu>
+      <Menu Checked="0" Enabled="1" FatherUID="Mnu_NewBridge" Image="" Position="0" String="Customer Commission Definition"
+    Type="1" UniqueID="Mnu_CustRebate">
+      </Menu>
+        <Menu Checked="0" Enabled="1" FatherUID="Mnu_NewBridge" Image="" Position="1" String="Supplier Rebate  Definition"
+   Type="1" UniqueID="Mnu_SubRebate">
+      </Menu>
+		</action>
+	</Menus>
+</Application>
