@@ -79,8 +79,12 @@
     <Compile Include="Base Classes\clsTable.vb" />
     <Compile Include="Base Classes\clsUtilities.vb" />
     <Compile Include="Base Classes\DBConnection.vb" />
+    <Compile Include="Business Logics\clsMissingRebatePosting.vb" />
+    <Compile Include="Business Logics\clsNBApprovalTemplate.vb" />
     <Compile Include="Business Logics\clsCustCommission.vb" />
     <Compile Include="Business Logics\clsDisRule.vb" />
+    <Compile Include="Business Logics\clsNBExpenses.vb" />
+    <Compile Include="Business Logics\clsNBLogin.vb" />
     <Compile Include="Business Logics\clsRebatePosting.vb" />
     <Compile Include="Business Logics\clsSalesPriceBP.vb" />
     <Compile Include="Business Logics\clsSupplierCommission.vb" />
@@ -155,6 +159,11 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bin\Debug\XML Files\frm_ApprovalTemp.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="bin\Debug\XML Files\frm_Expenses.xml" />
+    <Content Include="bin\Debug\XML Files\frm_LoginSetup.xml" />
     <Content Include="bin\Debug\XML Files\frm_SubComDef.xml" />
     <Content Include="bin\Debug\XML Files\frm_CustComDef.xml" />
     <Content Include="bin\Debug\XML Files\frm_DisRule.xml" />

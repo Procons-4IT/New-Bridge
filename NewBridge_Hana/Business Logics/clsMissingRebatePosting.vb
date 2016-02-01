@@ -1,4 +1,4 @@
-﻿Public Class clsRebatePosting
+﻿Public Class clsMissingRebatePosting
     Inherits clsBase
     Private oCFLEvent As SAPbouiCOM.IChooseFromListEvent
     Private oDBSrc_Line As SAPbouiCOM.DBDataSource
@@ -21,28 +21,59 @@
         MyBase.New()
         InvForConsumedItems = 0
     End Sub
+    Public Sub LoadForm()
+        Try
+            oForm = oApplication.Utilities.LoadForm(xml_Posting, frm_Posting)
+            oForm = oApplication.SBO_Application.Forms.ActiveForm()
+            oForm.DataSources.UserDataSources.Add("Choice", SAPbouiCOM.BoDataType.dt_SHORT_TEXT)
+            oCombobox = oForm.Items.Item("4").Specific
+            oCombobox.DataBind.SetBound(True, "", "Choice")
+            oCombobox.ValidValues.Add("I", "Invoice")
+            oCombobox.ValidValues.Add("C", "Credit Note")
+            oCombobox.Select("I", SAPbouiCOM.BoSearchKey.psk_ByValue)
+            oCombobox.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly
 
+            oForm.Freeze(True)
+         
+            'Databind(oForm)
+          
+            strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OINV T0 where 1=2"
+            oGrid = oForm.Items.Item("9").Specific
+            oGrid.DataTable.ExecuteQuery(strSQL)
+            oGrid.AutoResizeColumns()
+            'oForm.Mode = SAPbouiCOM.BoFormMode.fm_OK_MODE
+            oForm.Freeze(False)
+        Catch ex As Exception
+            oForm.Freeze(False)
+            oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+        End Try
+    End Sub
 #Region "Item Event"
     Public Overrides Sub ItemEvent(ByVal FormUID As String, ByRef pVal As SAPbouiCOM.ItemEvent, ByRef BubbleEvent As Boolean)
         Try
-            If pVal.FormTypeEx = frm_Invoice Then
+            If pVal.FormTypeEx = frm_Posting Then
                 Select Case pVal.BeforeAction
                     Case True
                         Select Case pVal.EventType
                             Case SAPbouiCOM.BoEventTypes.et_FORM_LOAD
-
                         End Select
 
                     Case False
                         Select Case pVal.EventType
                             Case SAPbouiCOM.BoEventTypes.et_FORM_LOAD
                                 oForm = oApplication.SBO_Application.Forms.Item(FormUID)
-
                             Case SAPbouiCOM.BoEventTypes.et_KEY_DOWN
-
-
                             Case SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED
-
+                                oForm = oApplication.SBO_Application.Forms.Item(FormUID)
+                                If pVal.ItemUID = "8" Then
+                                    DataBind(oForm)
+                                End If
+                                If pVal.ItemUID = "3" Then
+                                    If oApplication.SBO_Application.MessageBox("Do you want to create rebate posting ?", , "Yes", "No") = 2 Then
+                                        Exit Sub
+                                    End If
+                                    Posting(oForm)
+                                End If
                         End Select
                 End Select
             End If
@@ -58,7 +89,10 @@
     Public Overrides Sub MenuEvent(ByRef pVal As SAPbouiCOM.MenuEvent, ByRef BubbleEvent As Boolean)
         Try
             Select Case pVal.MenuUID
-                Case mnu_InvSO
+                Case mnu_Posting
+                    If pVal.BeforeAction - False Then
+                        LoadForm()
+                    End If
                 Case mnu_FIRST, mnu_LAST, mnu_NEXT, mnu_PREVIOUS
             End Select
         Catch ex As Exception
@@ -67,6 +101,67 @@
         End Try
     End Sub
 #End Region
+    Private Sub Posting(aForm As SAPbouiCOM.Form)
+        Try
+
+            aForm.Freeze(True)
+
+            Dim aKey As Integer
+            Dim strChoice As String
+            Dim oCheckbox As SAPbouiCOM.CheckBoxColumn
+            oCombobox = aForm.Items.Item("4").Specific
+            strChoice = oCombobox.Selected.Value
+            oGrid = aForm.Items.Item("9").Specific
+            '  oCheckbox = oGrid.Columns.Item("Select")
+            oApplication.Utilities.Message("Processing....", SAPbouiCOM.BoStatusBarMessageType.smt_Warning)
+            If strChoice = "I" Then
+                Dim oobj As SAPbobsCOM.Documents
+                oobj = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oInvoices)
+                For intRow As Integer = 0 To oGrid.DataTable.Rows.Count - 1
+                    If 1 = 1 Then ' oCheckbox.IsChecked(intRow) = True Then
+                        aKey = oGrid.DataTable.GetValue("InternalKey", intRow)
+                        If oobj.GetByKey(aKey) Then
+                            If oobj.DocType = SAPbobsCOM.BoDocumentTypes.dDocument_Items Then
+                                If oobj.Cancelled = SAPbobsCOM.BoYesNoEnum.tYES Then
+                                    CreditAPCreditNote(oobj.DocEntry)
+                                    CancelJournal(oobj.DocEntry)
+                                Else
+                                    CreateAPInvoice(oobj.DocEntry)
+                                    CreateJournal(oobj.DocEntry)
+                                End If
+                            End If
+                        End If
+                    End If
+                Next
+            End If
+            If strChoice = "C" Then
+                Dim oobj As SAPbobsCOM.Documents
+                oobj = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oCreditNotes)
+                For intRow As Integer = 0 To oGrid.DataTable.Rows.Count - 1
+                    If 1 = 1 Then 'oCheckbox.IsChecked(intRow) = True Then
+                        aKey = oGrid.DataTable.GetValue("InternalKey", intRow)
+                        If oobj.GetByKey(aKey) Then
+                            If oobj.DocType = SAPbobsCOM.BoDocumentTypes.dDocument_Items Then
+
+                                If oobj.Cancelled = SAPbobsCOM.BoYesNoEnum.tYES Then
+                                    CancelARCreditNoe(oobj.DocEntry)
+                                Else
+                                    CreditAPCreditNote_ARCreditNote(oobj.DocEntry)
+                                End If
+                            End If
+                        End If
+
+                    End If
+                Next
+
+            End If
+            oApplication.Utilities.Message("Operation Completed successfully", SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+            aForm.Freeze(False)
+        Catch ex As Exception
+            aForm.Freeze(False)
+            oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+        End Try
+    End Sub
 
     Public Sub FormDataEvent(ByRef BusinessObjectInfo As SAPbouiCOM.BusinessObjectInfo, ByRef BubbleEvent As Boolean)
         Try
@@ -263,11 +358,17 @@
         Try
             strCreditAc = ""
             strDebitAc = ""
-           
+
 
             If 1 = 1 Then 'strCreditAc <> "" And strDebitAc <> "" Then
-                strQuery = "Select * from OINV where ""DocEntry""=" & DocNum & ""
-                oTest.DoQuery(strQuery)
+                '   strQuery = "Select * from OINV where ""DocEntry""=" & DocNum & ""
+                '  oTest.DoQuery(strQuery) '
+
+                If oApplication.Company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
+                    strQuery = "Select * from OINV where ifnull(""U_Z_JournalRef"",'')='' and ""DocEntry""=" & DocNum & ""
+                Else
+                    strQuery = "Select * from OINV where isnull(""U_Z_JournalRef"",'')='' and ""DocEntry""=" & DocNum & ""
+                End If
                 If oTest.RecordCount > 0 Then
                     strQuery = "Select * from OCRD where ""CardCode""='" & oTest.Fields.Item("CardCode").Value & "' and ""U_Z_ComRePay""<>''"
                     otest1.DoQuery(strQuery)
@@ -278,9 +379,7 @@
                             oAPInv.TaxDate = oTest.Fields.Item("DocDate").Value
                             oAPInv.DueDate = oTest.Fields.Item("DocDueDate").Value
                             oAPInv.ReferenceDate = oTest.Fields.Item("DocDate").Value
-
                             'oAPInv.CardCode = otest1.Fields.Item("U_Z_ComRePay").Value
-
                             oAPInv.UserFields.Fields.Item("U_Z_ARInvoice").Value = oTest.Fields.Item("DocNum").Value.ToString
                             oAPInv.UserFields.Fields.Item("U_Z_BaseEntry").Value = DocNum
                             oAPInv.Memo = "Rebate Posting Based on A/R Invoice  : " & oTest.Fields.Item("DocNum").Value.ToString
@@ -377,6 +476,7 @@
                                     strDocNum = oAPInv.JdtNum
                                     strQuery = "Update OINV set ""U_Z_JournalRef""='" & strDocNum & "' where ""DocEntry""=" & DocNum
                                     oTest2.DoQuery(strQuery)
+
                                 End If
                             End If
                         End If
@@ -389,6 +489,86 @@
         End Try
     End Function
 
+    Private Sub DataBind(aform As SAPbouiCOM.Form)
+        Try
+            aform.Freeze(True)
+            Dim strSQL, strFromDate, strToDate, strChoice, strcondition As String
+            Dim dtFromDate, dtToDate As Date
+            oCombobox = aform.Items.Item("4").Specific
+            strChoice = oCombobox.Selected.Value
+            strFromDate = oApplication.Utilities.getEdittextvalue(aform, "6")
+            strToDate = oApplication.Utilities.getEdittextvalue(aform, "7")
+            If strFromDate = "" Then
+                strcondition = "1=1"
+            Else
+                dtFromDate = oApplication.Utilities.GetDateTimeValue(strFromDate)
+                strcondition = " T0.""DocDate"" >='" & dtFromDate.ToString("yyyy-MM-dd") & "'"
+            End If
+
+            If strToDate = "" Then
+                strcondition = strcondition & " and 1=1"
+            Else
+                dtToDate = oApplication.Utilities.GetDateTimeValue(strToDate)
+                strcondition = strcondition & " and  T0.""DocDate"" <='" & dtFromDate.ToString("yyyy-MM-dd") & "'"
+            End If
+            If oApplication.Company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
+                If strChoice = "I" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OINV T0 where T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
+
+                Else
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from ORIN T0 where  T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
+
+                End If
+            Else
+                If strChoice = "I" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OINV T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
+
+                Else
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from ORIN T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
+
+                End If
+            End If
+
+
+
+            If oApplication.Company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
+                If strChoice = "I" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from OINV T0 where T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
+
+                Else
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from ORIN T0 where  T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
+
+                End If
+            Else
+                If strChoice = "I" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from OINV T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
+
+                Else
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from ORIN T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
+
+                End If
+            End If
+           
+            oGrid = aform.Items.Item("9").Specific
+            oGrid.DataTable.ExecuteQuery(strSQL)
+            oEditTextColumn = oGrid.Columns.Item(2)
+            oEditTextColumn.LinkedObjectType = "2"
+
+            oEditTextColumn = oGrid.Columns.Item(0)
+            If strChoice = "I" Then
+                oEditTextColumn.LinkedObjectType = SAPbouiCOM.BoLinkedObject.lf_Invoice
+            Else
+                oEditTextColumn.LinkedObjectType = SAPbouiCOM.BoLinkedObject.lf_InvoiceCreditMemo
+            End If
+
+            ' oGrid.Columns.Item("Select").Type = SAPbouiCOM.BoGridColumnType.gct_CheckBox
+
+            aform.Freeze(False)
+        Catch ex As Exception
+            aform.Freeze(False)
+            oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+        End Try
+    End Sub
     Public Function CreateAPInvoice(ByVal DocNum As String) As Boolean
         Dim oAPInv As SAPbobsCOM.Documents
         Dim oTest, otest1, oRec, oTemp1, oTest2 As SAPbobsCOM.Recordset
@@ -398,10 +578,15 @@
         oTemp1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
         oAPInv = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseInvoices)
         Try
-            ApplyRebateAmount(DocNum)
-            strQuery = "Select * from OINV where ""DocEntry""=" & DocNum & ""
+
+            If oApplication.Company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
+                strQuery = "Select * from OINV where ifnull(""U_Z_APInvoice"",'')='' and ""DocEntry""=" & DocNum & ""
+            Else
+                strQuery = "Select * from OINV where isnull(""U_Z_APInvoice"",'')='' and ""DocEntry""=" & DocNum & ""
+            End If
             oTest.DoQuery(strQuery)
             If oTest.RecordCount > 0 Then
+                ApplyRebateAmount(DocNum)
                 strQuery = "Select * from OCRD where ""CardCode""='" & oTest.Fields.Item("CardCode").Value & "' and ""U_Z_ComRePay""<>''"
                 otest1.DoQuery(strQuery)
                 If otest1.RecordCount > 0 Then
@@ -417,8 +602,6 @@
                         oAPInv.NumAtCard = "AR Invoice No : " & oTest.Fields.Item("DocNum").Value.ToString
                         oAPInv.Comments = "Rebate/Commission posting based on A/R Invoice No  : " & oTest.Fields.Item("DocNum").Value.ToString
                         Dim blnLineExists As Boolean = False
-                        '   strQuery = "Select sum(""U_Z_Comm"") 'U_Z_Comm',sum(""U_Z_MarkReb"") 'U_Z_MarkReb',""OcrCode"",""OcrCode2"",""OcrCode3"",""OcrCode4"",""OcrCode5"" from INV1 where ""DocEntry""='" & DocNum & "' and ""U_Z_IsComm""='Y' group by ""OcrCode"",""OcrCode2"",""OcrCode3"",""OcrCode4"",""OcrCode5"""
-                        '  strQuery = "Select sum(""U_Z_Comm"") ""U_Z_Comm"",sum(""U_Z_MarkReb"") ""U_Z_MarkReb"",""OcrCode"" from INV1 where ""DocEntry""='" & DocNum & "' and ""U_Z_IsComm""='Y' group by ""OcrCode"""
                         strQuery = "Select (""U_Z_Comm"") ""U_Z_Comm"",(""U_Z_MarkReb"") ""U_Z_MarkReb"",""OcrCode"",""OcrCode2"",""OcrCode3"",""OcrCode4"",""OcrCode5"" from INV1 where ""DocEntry""='" & DocNum & "' and ""U_Z_IsComm""='Y' "
                         oTemp1.DoQuery(strQuery)
                         Dim dbLComm, dblMarketing As Double

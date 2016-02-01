@@ -60,7 +60,7 @@ Public NotInheritable Class clsTable
         Dim oUserFieldMD As SAPbobsCOM.UserFieldsMD
         Try
 
-            If Not (strTab = "OADM" Or strTab = "OPCH" Or strTab = "OITM" Or strTab = "OJDT" Or strTab = "INV1" Or strTab = "RDR1" Or strTab = "OINV" Or strTab = "OCRD" Or strTab = "SPP1" Or strTab = "OWHS") Then
+            If Not (strTab = "OADM" Or strTab = "OPCH" Or strTab = "OITM" Or strTab = "OJDT" Or strTab = "INV1" Or strTab = "RDR1" Or strTab = "OINV" Or strTab = "OCRD" Or strTab = "SPP1" Or strTab = "OWHS" Or strTab = "OHEM") Then
                 strTab = "@" + strTab
             End If
 
@@ -230,7 +230,8 @@ Public NotInheritable Class clsTable
     '********************************************************************
     Private Sub AddUDO(ByVal strUDO As String, ByVal strDesc As String, ByVal strTable As String, _
                                 Optional ByVal sFind1 As String = "", Optional ByVal sFind2 As String = "", _
-                                        Optional ByVal strChildTbl As String = "", Optional ByVal nObjectType As SAPbobsCOM.BoUDOObjType = SAPbobsCOM.BoUDOObjType.boud_Document)
+                                        Optional ByVal strChildTbl As String = "", Optional ByVal strChildTb2 As String = "", _
+                                        Optional ByVal strChildTb3 As String = "", Optional ByVal strChildTb4 As String = "", Optional ByVal nObjectType As SAPbobsCOM.BoUDOObjType = SAPbobsCOM.BoUDOObjType.boud_Document, Optional ByVal blnCanArchive As Boolean = False, Optional ByVal strLogName As String = "")
 
         Dim oUserObjectMD As SAPbobsCOM.UserObjectsMD
         Try
@@ -239,7 +240,6 @@ Public NotInheritable Class clsTable
                 oUserObjectMD.CanCancel = SAPbobsCOM.BoYesNoEnum.tYES
                 oUserObjectMD.CanClose = SAPbobsCOM.BoYesNoEnum.tYES
                 oUserObjectMD.CanCreateDefaultForm = SAPbobsCOM.BoYesNoEnum.tNO
-                oUserObjectMD.CanDelete = SAPbobsCOM.BoYesNoEnum.tNO
                 oUserObjectMD.CanFind = SAPbobsCOM.BoYesNoEnum.tYES
 
                 If sFind1 <> "" And sFind2 <> "" Then
@@ -255,8 +255,34 @@ Public NotInheritable Class clsTable
                 oUserObjectMD.CanYearTransfer = SAPbobsCOM.BoYesNoEnum.tNO
                 oUserObjectMD.ExtensionName = ""
 
+                Dim intTables As Integer = 0
                 If strChildTbl <> "" Then
                     oUserObjectMD.ChildTables.TableName = strChildTbl
+                End If
+                If strChildTb2 <> "" Then
+                    If strChildTbl <> "" Then
+                        oUserObjectMD.ChildTables.Add()
+                        intTables = intTables + 1
+                    End If
+                    oUserObjectMD.ChildTables.SetCurrentLine(intTables)
+                    oUserObjectMD.ChildTables.TableName = strChildTb2
+                End If
+                If strChildTb3 <> "" Then
+                    If strChildTb2 <> "" Then
+                        oUserObjectMD.ChildTables.Add()
+                        intTables = intTables + 1
+                    End If
+                    oUserObjectMD.ChildTables.SetCurrentLine(intTables)
+
+                    oUserObjectMD.ChildTables.TableName = strChildTb3
+                End If
+                If strChildTb4 <> "" Then
+                    If strChildTb3 <> "" Then
+                        oUserObjectMD.ChildTables.Add()
+                        intTables = intTables + 1
+                    End If
+                    oUserObjectMD.ChildTables.SetCurrentLine(intTables)
+                    oUserObjectMD.ChildTables.TableName = strChildTb4
                 End If
 
                 oUserObjectMD.ManageSeries = SAPbobsCOM.BoYesNoEnum.tNO
@@ -265,6 +291,12 @@ Public NotInheritable Class clsTable
                 oUserObjectMD.ObjectType = nObjectType
                 oUserObjectMD.TableName = strTable
 
+
+                If blnCanArchive Then
+                    oUserObjectMD.CanLog = SAPbobsCOM.BoYesNoEnum.tYES
+                    oUserObjectMD.LogTableName = strLogName
+                End If
+
                 If oUserObjectMD.Add() <> 0 Then
                     Throw New Exception(oApplication.Company.GetLastErrorDescription)
                 End If
@@ -272,7 +304,6 @@ Public NotInheritable Class clsTable
 
         Catch ex As Exception
             Throw ex
-
         Finally
             System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserObjectMD)
             oUserObjectMD = Nothing
@@ -282,6 +313,80 @@ Public NotInheritable Class clsTable
 
     End Sub
 
+    Public Function UDOExpances(ByVal strUDO As String, _
+                       ByVal strDesc As String, _
+                           ByVal strTable As String, _
+                               ByVal intFind As Integer, _
+                                   Optional ByVal strCode As String = "", _
+                                       Optional ByVal strName As String = "") As Boolean
+        Dim oUserObjects As SAPbobsCOM.UserObjectsMD
+        Dim lngRet As Long
+        Try
+            oUserObjects = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserObjectsMD)
+            If oUserObjects.GetByKey(strUDO) = 0 Then
+                oUserObjects.CanCancel = SAPbobsCOM.BoYesNoEnum.tNO
+                oUserObjects.CanClose = SAPbobsCOM.BoYesNoEnum.tYES
+                oUserObjects.CanCreateDefaultForm = SAPbobsCOM.BoYesNoEnum.tNO
+                oUserObjects.CanDelete = SAPbobsCOM.BoYesNoEnum.tNO
+                oUserObjects.CanFind = SAPbobsCOM.BoYesNoEnum.tYES
+
+
+                oUserObjects.CanLog = SAPbobsCOM.BoYesNoEnum.tNO
+                oUserObjects.LogTableName = ""
+                oUserObjects.CanYearTransfer = SAPbobsCOM.BoYesNoEnum.tNO
+                oUserObjects.ExtensionName = ""
+
+                oUserObjects.FormColumns.FormColumnAlias = "Code"
+                oUserObjects.FormColumns.FormColumnDescription = "Code"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "Name"
+                oUserObjects.FormColumns.FormColumnDescription = "Name"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "DocEntry"
+                oUserObjects.FormColumns.FormColumnDescription = "DocEntry"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "U_ExpName"
+                oUserObjects.FormColumns.FormColumnDescription = "U_ExpName"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "U_Active"
+                oUserObjects.FormColumns.FormColumnDescription = "U_Active"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "U_PostType"
+                oUserObjects.FormColumns.FormColumnDescription = "U_PostType"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "U_CrActCode"
+                oUserObjects.FormColumns.FormColumnDescription = "U_CrActCode"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.FormColumns.FormColumnAlias = "U_DbActCode"
+                oUserObjects.FormColumns.FormColumnDescription = "U_DbActCode"
+                oUserObjects.FormColumns.Add()
+                oUserObjects.ManageSeries = SAPbobsCOM.BoYesNoEnum.tNO
+                oUserObjects.Code = strUDO
+                oUserObjects.Name = strDesc
+                oUserObjects.ObjectType = SAPbobsCOM.BoUDOObjType.boud_MasterData
+                oUserObjects.TableName = strTable
+
+                If oUserObjects.CanFind = 1 Then
+                    oUserObjects.FindColumns.ColumnAlias = strCode
+                End If
+
+                If oUserObjects.Add() <> 0 Then
+                    oApplication.Utilities.Message(oApplication.Company.GetLastErrorDescription, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserObjects)
+                    oUserObjects = Nothing
+                    Return False
+                End If
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserObjects)
+                oUserObjects = Nothing
+                Return True
+            End If
+        Catch ex As Exception
+            Throw ex
+        Finally
+            oUserObjects = Nothing
+            GC.Collect()
+        End Try
+    End Function
 #End Region
 
 #Region "Public Functions"
@@ -355,6 +460,105 @@ Public NotInheritable Class clsTable
             AddFields("OJDT", "Z_BaseEntry", "A/R Invoice DocEntry", SAPbobsCOM.BoFieldTypes.db_Alpha, , 20)
             AddFields("OPCH", "Z_JournalRef", "Journal Entry Ref.No", SAPbobsCOM.BoFieldTypes.db_Alpha, , 20)
             AddFields("OCRD", "Z_ComBase", "Commission Base %", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Percentage)
+
+
+            AddTables("Z_NBLOGIN", "New Bridge Login Details", SAPbobsCOM.BoUTBTableType.bott_Document)
+            AddFields("Z_NBLOGIN", "UID", "User ID", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
+            AddFields("Z_NBLOGIN", "PWD", "Password", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
+            AddFields("Z_NBLOGIN", "EMPID", "Employee ID", SAPbobsCOM.BoFieldTypes.db_Alpha, , 30)
+            AddFields("Z_NBLOGIN", "EMPNAME", "Employee NAME", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
+            addField("@Z_NBLOGIN", "ESSAPPROVER", "ESS Approval", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "E,M", "Employee,Manager", "E")
+
+            AddTables("Z_NBEXPANCES", "New Bridge Expences Master", SAPbobsCOM.BoUTBTableType.bott_MasterData)
+            AddFields("Z_NBEXPANCES", "ExpName", "Expences Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
+            AddFields("Z_NBEXPANCES", "CrActCode", "Credit Account Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXPANCES", "DbActCode", "Debit Account Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            addField("@Z_NBEXPANCES", "Active", "Status", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "Y,N", "Yes,No", "Y")
+            addField("@Z_NBEXPANCES", "PostType", "Posting Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "B,G", "Business Partners,G/L Account", "B")
+
+            AddTables("Z_NBOAPPT", "Approval Template", SAPbobsCOM.BoUTBTableType.bott_Document)
+            AddTables("Z_NBAPPT1", "Approval Orginator", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)
+            AddTables("Z_NBAPPT2", "Approval Authorizer", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)
+
+            AddFields("Z_NBOAPPT", "Code", "Approval Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOAPPT", "Name", "Approval Description", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
+            AddFields("Z_NBOAPPT", "DocType", "Document Type", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOAPPT", "DocDesc", "Document Description", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
+            addField("@Z_NBOAPPT", "Active", "Active", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "Y,N", "Yes,No", "Y")
+
+            AddFields("Z_NBAPPT1", "OUser", "Orginator Id", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPPT1", "OName", "Orginator Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
+
+            AddFields("Z_NBAPPT2", "AUser", "Authorizer Id", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPPT2", "AName", "Authorizer Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
+            AddFields("Z_NBAPPT2", "AMan", "Mandatory", SAPbobsCOM.BoFieldTypes.db_Alpha, , 1)
+            AddFields("Z_NBAPPT2", "AFinal", "Final Stage", SAPbobsCOM.BoFieldTypes.db_Alpha, , 1)
+
+            AddTables("Z_NBAPHIS", "Approval History", SAPbobsCOM.BoUTBTableType.bott_Document)
+            AddFields("Z_NBAPHIS", "DocEntry", "Document Entry", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPHIS", "LineId", "Document LineId", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPHIS", "DocType", "Document Type", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPHIS", "EmpId", "Employee Id", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPHIS", "EmpName", "Employee Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
+            addField("@Z_NBAPHIS", "AppStatus", "Approved Status", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,A,R", "Pending,Approved,Rejected", "P")
+            AddFields("Z_NBAPHIS", "Remarks", "Comments", SAPbobsCOM.BoFieldTypes.db_Memo)
+            AddFields("Z_NBAPHIS", "ApproveBy", "Approved By", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBAPHIS", "Approvedt", "Approver Date", SAPbobsCOM.BoFieldTypes.db_Date)
+            AddFields("Z_NBAPHIS", "ADocEntry", "Template DocEntry", SAPbobsCOM.BoFieldTypes.db_Numeric)
+            AddFields("Z_NBAPHIS", "ALineId", "Template LineId", SAPbobsCOM.BoFieldTypes.db_Numeric)
+            AddFields("Z_NBAPHIS", "Month", "Month", SAPbobsCOM.BoFieldTypes.db_Numeric)
+            AddFields("Z_NBAPHIS", "Year", "Year", SAPbobsCOM.BoFieldTypes.db_Numeric)
+
+            AddFields("OHEM", "Z_NBCardCode", "NewBridge Customer Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 20)
+
+            ''Expenses
+            AddTables("Z_NBOEXP", "Expenses Entry Header", SAPbobsCOM.BoUTBTableType.bott_Document)
+            AddFields("Z_NBOEXP", "EmpCode", "Employee Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "EmpName", "Employee Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 150)
+            addField("@Z_NBOEXP", "DocStatus", "Document Status", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "O,C", "Opened,Closed", "O")
+            AddFields("Z_NBOEXP", "LFANo", "LFA Number", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "PONo", "PO Number", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "Dim1", "Dimension 1", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "Dim2", "Dimension 2", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "Dim3", "Dimension 3", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "Country", "Country", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "Product", "Product", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBOEXP", "DeptName", "Department Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            addField("@Z_NBOEXP", "TypeofExp", "Expense Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,L", "Personal,LFA", "L")
+
+            AddTables("Z_NBEXP1", "Expenses Entry Lines", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)
+            AddFields("Z_NBEXP1", "ReqDate", "Request Date", SAPbobsCOM.BoFieldTypes.db_Date)
+            AddFields("Z_NBEXP1", "ExpCode", "Expenses Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 50)
+            AddFields("Z_NBEXP1", "ExpName", "Expenses Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 150)
+            AddFields("Z_NBEXP1", "TransCur", "Transaction Currency", SAPbobsCOM.BoFieldTypes.db_Alpha, , 50)
+            AddFields("Z_NBEXP1", "TransAmt", "Transaction Amount", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Sum)
+            AddFields("Z_NBEXP1", "Remarks", "Remarks", SAPbobsCOM.BoFieldTypes.db_Memo)
+            AddFields("Z_NBEXP1", "Ref1", "Reference", SAPbobsCOM.BoFieldTypes.db_Alpha, , 150)
+            AddFields("Z_NBEXP1", "Attachment", "Attachment", SAPbobsCOM.BoFieldTypes.db_Memo)
+            AddFields("Z_NBEXP1", "ApproveId", "Approve Template Id", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "ApproveBy", "Approved By", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
+            AddFields("Z_NBEXP1", "Approvedt", "Approver Date", SAPbobsCOM.BoFieldTypes.db_Date)
+            addField("@Z_NBEXP1", "AppStatus", "Approved Status", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,R,A", "Pending,Rejected,Approved", "P")
+            AddFields("Z_NBEXP1", "CurApprover", "Current Approver", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "NxtApprover", "Next Approver", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            addField("@Z_NBEXP1", "AppRequired", "Approval Required", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "Y,N", "Yes,No", "Y")
+            AddFields("Z_NBEXP1", "AppReqDate", "Required Date", SAPbobsCOM.BoFieldTypes.db_Date)
+            AddFields("Z_NBEXP1", "ReqTime", "Required Time", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "RejRemark", "Rejection Remarks", SAPbobsCOM.BoFieldTypes.db_Memo)
+            AddFields("Z_NBEXP1", "CrActCode", "Credit Account Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "DbActCode", "Debit Account Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            addField("@Z_NBEXP1", "PostType", "Posting Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "B,G", "Business Partners,G/L Account", "B")
+            addField("@Z_NBEXP1", "IsDeleted", "Temporary deleted", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "Y,N", "Yes,No", "N")
+            AddFields("Z_NBEXP1", "CardCode", "NewBridge Customer Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 20)
+            AddFields("Z_NBEXP1", "DocRefCode", "Document Ref.Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "LFANo", "LFA Number", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "PONo", "PO Number", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "Dim1", "Dimension 1", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "Dim2", "Dimension 2", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "Dim3", "Dimension 3", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "Country", "Country", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "Product", "Product", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            CreateUDO()
         Catch ex As Exception
             Throw ex
         Finally
@@ -365,7 +569,11 @@ Public NotInheritable Class clsTable
 
     Public Sub CreateUDO()
         Try
-
+            AddUDO("Z_NBOEXP", "Expenses Entry", "Z_NBOEXP", "DocEntry", "U_EmpCode", "Z_NBEXP1", , , , SAPbobsCOM.BoUDOObjType.boud_Document)
+            AddUDO("Z_NBLOGIN", "LoginSetup", "Z_NBLOGIN", "DocEntry", "U_UID", , , , , SAPbobsCOM.BoUDOObjType.boud_Document)
+            AddUDO("Z_NBAPHIS", "Approval History", "Z_NBAPHIS", "DocEntry", "U_DocEntry", , , , , SAPbobsCOM.BoUDOObjType.boud_Document, True, "AZ_NBAPHIS")
+            AddUDO("Z_NBOAPPT", "Approval Template", "Z_NBOAPPT", "DocEntry", "U_Code", "Z_NBAPPT1", "Z_NBAPPT2", , , SAPbobsCOM.BoUDOObjType.boud_Document)
+            UDOExpances("Z_NBEXPANCES", "Expences - Master", "Z_NBEXPANCES", 1, "U_ExpName")
         Catch ex As Exception
             Throw ex
         End Try

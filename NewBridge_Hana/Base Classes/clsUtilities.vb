@@ -1,4 +1,10 @@
 Imports System.IO
+Imports System.Net.Mail
+
+Imports System.Collections.Specialized
+Imports System.Security.Cryptography
+Imports System.Text
+Imports System.Management
 Public Class clsUtilities
 
 
@@ -6,6 +12,7 @@ Public Class clsUtilities
     Private strDecSep As String = "."
     Private intQtyDec As Integer = 3
     Private FormNum As Integer
+    Public key As String = "!@#$%^*()"
 
     Public Sub New()
         MyBase.New()
@@ -181,6 +188,21 @@ Public Class clsUtilities
             oRS = Nothing
         End Try
     End Function
+    Public Sub AssignSerialNo(ByVal aMatrix As SAPbouiCOM.Matrix, ByVal aform As SAPbouiCOM.Form)
+        aform.Freeze(True)
+        For intRow As Integer = 1 To aMatrix.RowCount
+            aMatrix.Columns.Item("SlNo").Cells.Item(intRow).Specific.value = intRow
+        Next
+        aform.Freeze(False)
+    End Sub
+
+    Public Sub AssignRowNo(ByVal aMatrix As SAPbouiCOM.Grid, ByVal aform As SAPbouiCOM.Form)
+        aform.Freeze(True)
+        For intRow As Integer = 0 To aMatrix.DataTable.Rows.Count - 1
+            aMatrix.RowHeaders.SetText(intRow, intRow + 1)
+        Next
+        aform.Freeze(False)
+    End Sub
 #End Region
 
 #Region "Status Message"
@@ -599,6 +621,69 @@ Public Class clsUtilities
 #End Region
 
 #End Region
+
+    Public Function Encrypt(ByVal strText As String, ByVal strEncrKey _
+      As String) As String
+        Dim byKey() As Byte = {}
+        Dim IV() As Byte = {&H12, &H34, &H56, &H78, &H90, &HAB, &HCD, &HEF}
+        Try
+            byKey = System.Text.Encoding.UTF8.GetBytes(Strings.Left(strEncrKey, 8))
+            Dim des As New DESCryptoServiceProvider()
+            Dim inputByteArray() As Byte = Encoding.UTF8.GetBytes(strText)
+            Dim ms As New MemoryStream()
+            Dim cs As New CryptoStream(ms, des.CreateEncryptor(byKey, IV), CryptoStreamMode.Write)
+            cs.Write(inputByteArray, 0, inputByteArray.Length)
+            cs.FlushFinalBlock()
+            Return Convert.ToBase64String(ms.ToArray())
+        Catch ex As Exception
+            Return ex.Message
+        End Try
+    End Function
+
+    Public Function Decrypt(ByVal strText As String, ByVal sDecrKey _
+               As String) As String
+        Dim byKey() As Byte = {}
+        Dim IV() As Byte = {&H12, &H34, &H56, &H78, &H90, &HAB, &HCD, &HEF}
+        Dim inputByteArray(strText.Length) As Byte
+        Try
+            byKey = System.Text.Encoding.UTF8.GetBytes(Strings.Left(sDecrKey, 8))
+            Dim des As New DESCryptoServiceProvider()
+            inputByteArray = Convert.FromBase64String(strText)
+            Dim ms As New MemoryStream()
+            Dim cs As New CryptoStream(ms, des.CreateDecryptor(byKey, IV), CryptoStreamMode.Write)
+            cs.Write(inputByteArray, 0, inputByteArray.Length)
+            cs.FlushFinalBlock()
+            Dim encoding As System.Text.Encoding = System.Text.Encoding.UTF8
+            Return encoding.GetString(ms.ToArray())
+        Catch ex As Exception
+            Return ex.Message
+        End Try
+    End Function
+
+    Public Function getLoginPassword(ByVal strLicenseText As String) As String
+        Dim fields() As String
+        Dim strPwd As String
+        ' Dim strLicenseText As String = oTemp1.Fields.Item("U_PWD").Value
+        If strLicenseText = "" Then
+            Return ""
+        End If
+        Try
+
+
+            Dim strDecryptText As String = oApplication.Utilities.Decrypt(strLicenseText, oApplication.Utilities.key)
+            fields = strDecryptText.Split("$")
+
+            If fields.Length > 0 Then
+                strPwd = fields(0)
+            Else
+                strPwd = ""
+            End If
+        Catch ex As Exception
+            strPwd = strLicenseText
+        End Try
+        Return strPwd
+    End Function
+
     Public Function getAccountCode(ByVal aCode As String) As String
         Dim oRS As SAPbobsCOM.Recordset
         oRS = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)

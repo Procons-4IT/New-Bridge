@@ -108,6 +108,10 @@ Public Class clsListener
                 Dim objInvoice As clsSupplierRebate
                 objInvoice = New clsSupplierRebate
                 objInvoice.FormDataEvent(BusinessObjectInfo, BubbleEvent)
+            Case frm_S01
+                Dim objInvoice As clsNBApprovalTemplate
+                objInvoice = New clsNBApprovalTemplate
+                objInvoice.FormDataEvent(BusinessObjectInfo, BubbleEvent)
         End Select
         '  End If
     End Sub
@@ -115,6 +119,18 @@ Public Class clsListener
         Try
             If pVal.BeforeAction = False Then
                 Select Case pVal.MenuUID
+                    Case mnu_Posting
+                        oMenuObject = New clsMissingRebatePosting
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
+                    Case mnu_AppTemp
+                        oMenuObject = New clsNBApprovalTemplate
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
+                    Case mnu_Logsetup
+                        oMenuObject = New clsNBLogin
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
+                    Case mnu_Expenses
+                        oMenuObject = New clsNBExpenses
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
 
                     Case mnu_CustRebate
                         oMenuObject = New clsCustCommission
@@ -133,6 +149,9 @@ Public Class clsListener
 
             Else
                 Select Case pVal.MenuUID
+                    Case mnu_Posting
+                        oMenuObject = New clsMissingRebatePosting
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
                     Case mnu_CLOSE
                         If _Collection.ContainsKey(_FormUID) Then
                             oMenuObject = _Collection.Item(_FormUID)
@@ -167,6 +186,31 @@ Public Class clsListener
 
             If pVal.EventType <> SAPbouiCOM.BoEventTypes.et_FORM_UNLOAD Then
                 Select Case pVal.FormTypeEx
+                    Case frm_Posting
+                        If Not _Collection.ContainsKey(FormUID) Then
+                            oItemObject = New clsMissingRebatePosting
+                            oItemObject.FrmUID = FormUID
+                            _Collection.Add(FormUID, oItemObject)
+                        End If
+                    Case frm_S01
+                        If Not _Collection.ContainsKey(FormUID) Then
+                            oItemObject = New clsNBApprovalTemplate
+                            oItemObject.FrmUID = FormUID
+                            _Collection.Add(FormUID, oItemObject)
+                        End If
+                    Case frm_Expenses
+                        If Not _Collection.ContainsKey(FormUID) Then
+                            oItemObject = New clsNBExpenses
+                            oItemObject.FrmUID = FormUID
+                            _Collection.Add(FormUID, oItemObject)
+                        End If
+                    Case frm_LoginSetup
+                        If Not _Collection.ContainsKey(FormUID) Then
+                            oItemObject = New clsNBLogin
+                            oItemObject.FrmUID = FormUID
+                            _Collection.Add(FormUID, oItemObject)
+                        End If
+
                     Case frm_CustComDef
                         If Not _Collection.ContainsKey(FormUID) Then
                             oItemObject = New clsCustCommission

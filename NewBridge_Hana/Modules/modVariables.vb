@@ -4,7 +4,7 @@ Public Module modVariables
     Public strSQL As String
     Public cfl_Text As String
     Public cfl_Btn As String
-
+    Public frmSourceMatrix As SAPbouiCOM.Matrix
     Public CompanyDecimalSeprator As String
     Public CompanyThousandSeprator As String
     Public strCardCode As String = ""
@@ -66,4 +66,20 @@ Public Module modVariables
 
     Public Const frm_DisRule As String = "frm_DisRule"
     Public Const xml_DisRule As String = "frm_DisRule.xml"
+
+    Public Const frm_LoginSetup As String = "frm_LogSetup"
+    Public Const mnu_Logsetup As String = "mnu_003"
+    Public Const xml_Logsetup As String = "frm_LoginSetup.xml"
+
+    Public Const frm_Expenses As String = "frm_Expenses"
+    Public Const mnu_Expenses As String = "mnu_004"
+    Public Const xml_Expenses As String = "frm_Expenses.xml"
+
+    Public Const frm_S01 As String = "frm_S01"
+    Public Const mnu_AppTemp As String = "mnu_005"
+    Public Const xml_AppTemp As String = "frm_ApprovalTemp.xml"
+
+    Public Const frm_Posting As String = "frm_Posting"
+    Public Const mnu_Posting As String = "mnu_006"
+    Public Const xml_Posting As String = "frm_Posting.xml"
 End Module
