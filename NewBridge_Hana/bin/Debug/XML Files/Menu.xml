@@ -20,6 +20,13 @@
 
       <Menu Checked="0" Enabled="1" FatherUID="Mnu_NewBridge" Image="" Position="5" String="Rebate Posting"
        Type="1" UniqueID="mnu_006">	</Menu>
+
+      <Menu Checked="0" Enabled="1" FatherUID="Mnu_NewBridge" Image="" Position="6" String="Budget Definition"
+       Type="1" UniqueID="mnu_007">	</Menu>
+
+      <Menu Checked="0" Enabled="1" FatherUID="Mnu_NewBridge" Image="" Position="7" String="Budget Control Report"
+     Type="1" UniqueID="mnu_008">	</Menu>
+
     </action>
   </Menus>
 </Application>

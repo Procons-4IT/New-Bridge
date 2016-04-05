@@ -85,6 +85,8 @@
     <Compile Include="Business Logics\clsDisRule.vb" />
     <Compile Include="Business Logics\clsNBExpenses.vb" />
     <Compile Include="Business Logics\clsNBLogin.vb" />
+    <Compile Include="Business Logics\clsBudgetDefinition.vb" />
+    <Compile Include="Business Logics\clsBudgetReport.vb" />
     <Compile Include="Business Logics\clsRebatePosting.vb" />
     <Compile Include="Business Logics\clsSalesPriceBP.vb" />
     <Compile Include="Business Logics\clsSupplierCommission.vb" />
@@ -164,11 +166,13 @@
     </Content>
     <Content Include="bin\Debug\XML Files\frm_Expenses.xml" />
     <Content Include="bin\Debug\XML Files\frm_LoginSetup.xml" />
+    <Content Include="bin\Debug\XML Files\frm_Z_OBUDDF.xml" />
     <Content Include="bin\Debug\XML Files\frm_SubComDef.xml" />
     <Content Include="bin\Debug\XML Files\frm_CustComDef.xml" />
     <Content Include="bin\Debug\XML Files\frm_DisRule.xml" />
     <Content Include="bin\Debug\XML Files\Menu.xml" />
     <Content Include="bin\Debug\XML Files\RemoveMenus.xml" />
+    <Content Include="bin\Debug\XML Files\frm_Z_BUD_R.xml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\Debug\Log\" />

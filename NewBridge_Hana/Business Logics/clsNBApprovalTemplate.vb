@@ -21,7 +21,6 @@
         InvForConsumedItems = 0
     End Sub
 
-
     Public Sub LoadForm()
         Try
             oForm = oApplication.Utilities.LoadForm(xml_AppTemp, frm_S01)
@@ -33,15 +32,19 @@
             oMatrix.AutoResizeColumns()
             oMatrix = oForm.Items.Item("10").Specific
             oMatrix.AutoResizeColumns()
+            oForm.EnableMenu(mnu_ADD, True)
             oForm.EnableMenu(mnu_ADD_ROW, True)
             oForm.EnableMenu(mnu_DELETE_ROW, False)
             oForm.Mode = SAPbouiCOM.BoFormMode.fm_FIND_MODE
             oForm.Items.Item("4").Click(SAPbouiCOM.BoCellClickType.ct_Regular)
+            oDBDataSource = oForm.DataSources.DBDataSources.Item(0)
+            oForm.DataSources.UserDataSources.Item("FolderDS").ValueEx = "Y"
             oForm.Freeze(False)
         Catch ex As Exception
             oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
         End Try
     End Sub
+
     Private Sub FillDocType(ByVal aForm As SAPbouiCOM.Form)
         Dim oTempRec As SAPbobsCOM.Recordset
         oComboBox = aForm.Items.Item("17").Specific
@@ -51,11 +54,11 @@
         Next
         oComboBox.ValidValues.Add("", "")
         oComboBox.ValidValues.Add("Exp", "Expenses")
+        oComboBox.ValidValues.Add("PR", "Purchase Request")
         oComboBox.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly
         aForm.Items.Item("17").DisplayDesc = True
         oComboBox.Select(0, SAPbouiCOM.BoSearchKey.psk_Index)
     End Sub
-
 
 #Region "Item Event"
 
@@ -152,6 +155,19 @@
                                     oMatrix1.Clear()
                                     oComboBox = oForm.Items.Item("17").Specific
                                     oApplication.Utilities.setEdittextvalue(oForm, "19", oComboBox.Selected.Description)
+                                    If oComboBox.Selected.Value = "Exp" Then
+                                        oForm.Items.Item("4").Click(SAPbouiCOM.BoCellClickType.ct_Regular)
+                                        oForm.Items.Item("_27").Visible = False
+                                        oForm.Items.Item("27").Visible = False
+                                        oForm.Items.Item("_28").Visible = False
+                                        oForm.Items.Item("28").Visible = False
+                                    Else
+                                        oForm.Items.Item("4").Click(SAPbouiCOM.BoCellClickType.ct_Regular)
+                                        oForm.Items.Item("_27").Visible = True
+                                        oForm.Items.Item("27").Visible = True
+                                        oForm.Items.Item("_28").Visible = True
+                                        oForm.Items.Item("28").Visible = True
+                                    End If
                                 End If
 
                             Case SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED
@@ -240,6 +256,15 @@
                                     End If
                                 Catch ex As Exception
                                 End Try
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_RESIZE
+                                If oForm.State = SAPbouiCOM.BoFormStateEnum.fs_Maximized Or oForm.State = SAPbouiCOM.BoFormStateEnum.fs_Restore Then
+                                    oForm = oApplication.SBO_Application.Forms.Item(FormUID)
+                                    Try
+                                        reDrawForm(oForm)
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
                         End Select
                 End Select
             End If
@@ -275,6 +300,13 @@
                 Case mnu_ADD
                     If pVal.BeforeAction = False Then
                         oForm = oApplication.SBO_Application.Forms.ActiveForm()
+                        oComboBox = oForm.Items.Item("17").Specific
+                        oComboBox.SelectExclusive(0, SAPbouiCOM.BoSearchKey.psk_Index)
+                        oForm.Items.Item("4").Click(SAPbouiCOM.BoCellClickType.ct_Regular)
+                        oForm.Items.Item("_27").Visible = False
+                        oForm.Items.Item("27").Visible = False
+                        oForm.Items.Item("_28").Visible = False
+                        oForm.Items.Item("28").Visible = False
                         enableControls(oForm, True)
                     End If
                 Case mnu_FIND
@@ -331,7 +363,17 @@
 
 #Region "Function"
 
-
+    Private Sub reDrawForm(ByVal oForm As SAPbouiCOM.Form)
+        Try
+            oForm.Freeze(True)
+            oForm.Items.Item("11").Width = oForm.Width - 25
+            oForm.Items.Item("11").Height = oForm.Items.Item("10").Height + 15
+            oForm.Freeze(False)
+        Catch ex As Exception
+            'oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+            oForm.Freeze(False)
+        End Try
+    End Sub
 
 
 #Region "Methods"
@@ -461,6 +503,7 @@
         Try
             aForm.Freeze(True)
             oComboBox = aForm.Items.Item("17").Specific
+
             Dim oTest As SAPbobsCOM.Recordset
             oTest = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
             If oApplication.Utilities.getEdittextvalue(aForm, "4") = "" Then
@@ -587,6 +630,7 @@
                 aForm.Freeze(False)
                 Return False
             End If
+
             oMatrix = aForm.Items.Item("9").Specific
             For i As Integer = 1 To oMatrix.RowCount
                 oEditText = oMatrix.Columns.Item("V_0").Cells.Item(i).Specific
@@ -604,6 +648,22 @@
                     End If
                 End If
             Next
+
+            oComboBox = aForm.Items.Item("27").Specific
+            If oComboBox.Selected.Value = "PR" Then
+                oRecordSet = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+                strQuery = "Select 1 As ""Return"",""DocEntry"" From ""@Z_NBOAPPT"""
+                strQuery += " Where "
+                strQuery += " ""U_Condition"" = '" & oComboBox.Selected.Value & "' And U_Active = 'Y' "
+                strQuery += " And CAST(""DocEntry"" AS Varchar) <> '" & oApplication.Utilities.getEdittextvalue(aForm, "12") & "'"
+                oRecordSet.DoQuery(strQuery)
+                If Not oRecordSet.EoF Then
+                    oApplication.Utilities.Message("Condtion Already Defined Already Exist...", SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                    aForm.Freeze(False)
+                    Return False
+                End If
+            End If
+
             AssignLineNo(aForm)
             aForm.Freeze(False)
             Return True
@@ -622,8 +682,23 @@
             aForm.Items.Item("4").Enabled = blnEnable
             aForm.Items.Item("6").Enabled = blnEnable
             aForm.Items.Item("17").Enabled = blnEnable
-            ' oComboBox = aForm.Items.Item("17").Specific
-            ' oComboBox.Select(0, SAPbouiCOM.BoSearchKey.psk_Index)
+
+            oComboBox = aForm.Items.Item("17").Specific
+            If Not IsNothing(oComboBox.Selected) Then
+                If oComboBox.Selected.Value = "Exp" Then
+                    oForm.Items.Item("4").Click(SAPbouiCOM.BoCellClickType.ct_Regular)
+                    oForm.Items.Item("_27").Visible = False
+                    oForm.Items.Item("27").Visible = False
+                    oForm.Items.Item("_28").Visible = False
+                    oForm.Items.Item("28").Visible = False
+                ElseIf oComboBox.Selected.Value = "PR" Then
+                    oForm.Items.Item("_27").Visible = True
+                    oForm.Items.Item("27").Visible = True
+                    oForm.Items.Item("_28").Visible = True
+                    oForm.Items.Item("28").Visible = True
+                End If
+            End If
+            
         Catch ex As Exception
             Throw ex
         End Try
@@ -632,5 +707,6 @@
 #End Region
 
 #End Region
+
 End Class
 

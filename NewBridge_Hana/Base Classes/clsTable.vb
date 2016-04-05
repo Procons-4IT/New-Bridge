@@ -485,6 +485,8 @@ Public NotInheritable Class clsTable
             AddFields("Z_NBOAPPT", "DocType", "Document Type", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             AddFields("Z_NBOAPPT", "DocDesc", "Document Description", SAPbobsCOM.BoFieldTypes.db_Alpha, , 100)
             addField("@Z_NBOAPPT", "Active", "Active", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "Y,N", "Yes,No", "Y")
+            addField("@Z_NBOAPPT", "Condition", "Condition", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "1,2,3", "<,>=,>", "1")
+            AddFields("Z_NBOAPPT", "Amount", "Amount", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
 
             AddFields("Z_NBAPPT1", "OUser", "Orginator Id", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             AddFields("Z_NBAPPT1", "OName", "Orginator Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
@@ -558,6 +560,33 @@ Public NotInheritable Class clsTable
             AddFields("Z_NBEXP1", "Dim3", "Dimension 3", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             AddFields("Z_NBEXP1", "Country", "Country", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             AddFields("Z_NBEXP1", "Product", "Product", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "BPCurrency", "BP Currency", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "SAPCurrency", "SAP Currency", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "LocCurrency", "Local Currency", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_NBEXP1", "ExcRate", "Exchange Rate", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Sum)
+            AddFields("Z_NBEXP1", "LocAmount", "Local Amount", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Sum)
+
+            AddTables("Z_OBUDDF", "Budget Definition", SAPbobsCOM.BoUTBTableType.bott_Document)
+            AddFields("Z_OBUDDF", "Year", "Year", SAPbobsCOM.BoFieldTypes.db_Alpha, , 4)
+            'AddFields("Z_OBUDDF", "Category", "Category", SAPbobsCOM.BoFieldTypes.db_Alpha, , 10)
+            AddFields("Z_OBUDDF", "Remarks", "Remarks", SAPbobsCOM.BoFieldTypes.db_Alpha, , 254)
+            addField("Z_OBUDDF", "Active", "Active", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_None, "N,Y", "No,Yes", "Y")
+
+            AddTables("Z_BUDDF1", "Budget Definition-Lines1", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)
+            AddFields("Z_BUDDF1", "Category", "Category", SAPbobsCOM.BoFieldTypes.db_Alpha, , 10)
+            AddFields("Z_BUDDF1", "DisCode", "Dimension", SAPbobsCOM.BoFieldTypes.db_Alpha, , 204)
+            AddFields("Z_BUDDF1", "OcrCode", "Dimension 1", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_BUDDF1", "OcrCode2", "Dimension 2", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_BUDDF1", "OcrCode3", "Dimension 3", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_BUDDF1", "OcrCode4", "Dimension 4", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_BUDDF1", "OcrCode5", "Dimension 5", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
+            AddFields("Z_BUDDF1", "Z_Budget", "Allocated Budget", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
+            AddFields("Z_BUDDF1", "Z_PRApprvd", "PR Approved", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
+            AddFields("Z_BUDDF1", "Z_POApprvd", "PO Approved", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
+            AddFields("Z_BUDDF1", "Z_GRApprvd", "Good Receipt Approved", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
+            AddFields("Z_BUDDF1", "Z_IVApprvd", "Invoiced Approved", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
+            AddFields("Z_BUDDF1", "Z_ABudget", "Available Budget", SAPbobsCOM.BoFieldTypes.db_Float, , , SAPbobsCOM.BoFldSubTypes.st_Price)
+
             CreateUDO()
         Catch ex As Exception
             Throw ex
@@ -574,10 +603,12 @@ Public NotInheritable Class clsTable
             AddUDO("Z_NBAPHIS", "Approval History", "Z_NBAPHIS", "DocEntry", "U_DocEntry", , , , , SAPbobsCOM.BoUDOObjType.boud_Document, True, "AZ_NBAPHIS")
             AddUDO("Z_NBOAPPT", "Approval Template", "Z_NBOAPPT", "DocEntry", "U_Code", "Z_NBAPPT1", "Z_NBAPPT2", , , SAPbobsCOM.BoUDOObjType.boud_Document)
             UDOExpances("Z_NBEXPANCES", "Expences - Master", "Z_NBEXPANCES", 1, "U_ExpName")
+            AddUDO("Z_OBUDDF", "Budget Definition", "Z_OBUDDF", "DocEntry", "U_Year", "Z_BUDDF1", "", , , SAPbobsCOM.BoUDOObjType.boud_Document)
         Catch ex As Exception
             Throw ex
         End Try
     End Sub
+
 #End Region
 
 End Class

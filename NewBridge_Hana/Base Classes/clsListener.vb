@@ -13,6 +13,7 @@ Public Class clsListener
     Private oSystemForms As Object
     Dim objFilters As SAPbouiCOM.EventFilters
     Dim objFilter As SAPbouiCOM.EventFilter
+
 #Region "New"
     Public Sub New()
         MyBase.New()
@@ -139,6 +140,12 @@ Public Class clsListener
                     Case mnu_SubRebate
                         oMenuObject = New clsSupplierCommission
                         oMenuObject.MenuEvent(pVal, BubbleEvent)
+                    Case mnu_Z_OBUDDF
+                        oMenuObject = New clsBudgetDefinition
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
+                    Case mnu_Z_BUD_R
+                        oMenuObject = New clsBudgetReport
+                        oMenuObject.MenuEvent(pVal, BubbleEvent)
                     Case mnu_ADD, mnu_FIND, mnu_FIRST, mnu_LAST, mnu_NEXT, mnu_PREVIOUS, mnu_ADD_ROW, mnu_DELETE_ROW
                         If _Collection.ContainsKey(_FormUID) Then
                             oMenuObject = _Collection.Item(_FormUID)
@@ -246,6 +253,18 @@ Public Class clsListener
                     Case frm_APInvoice
                         If Not _Collection.ContainsKey(FormUID) Then
                             oItemObject = New clsSupplierRebate
+                            oItemObject.FrmUID = FormUID
+                            _Collection.Add(FormUID, oItemObject)
+                        End If
+                    Case frm_Z_OBUDDF
+                        If Not _Collection.ContainsKey(FormUID) Then
+                            oItemObject = New clsBudgetDefinition
+                            oItemObject.FrmUID = FormUID
+                            _Collection.Add(FormUID, oItemObject)
+                        End If
+                    Case frm_Z_BUD_R
+                        If Not _Collection.ContainsKey(FormUID) Then
+                            oItemObject = New clsBudgetReport
                             oItemObject.FrmUID = FormUID
                             _Collection.Add(FormUID, oItemObject)
                         End If

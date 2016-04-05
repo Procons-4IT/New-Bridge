@@ -12,6 +12,7 @@ Public Module modVariables
     Public blnError As Boolean = False
     Public frmSourceForm As SAPbouiCOM.Form
     Public strDocEntry As String
+    Public blnIsHana As Boolean
 
     Public Enum ValidationResult As Integer
         CANCEL = 0
@@ -82,4 +83,13 @@ Public Module modVariables
     Public Const frm_Posting As String = "frm_Posting"
     Public Const mnu_Posting As String = "mnu_006"
     Public Const xml_Posting As String = "frm_Posting.xml"
+
+    Public Const frm_Z_OBUDDF As String = "frm_Z_OBUDDF"
+    Public Const mnu_Z_OBUDDF As String = "mnu_007"
+    Public Const xml_Z_OBUDDF As String = "frm_Z_OBUDDF.xml"
+
+    Public Const frm_Z_BUD_R As String = "frm_Z_BUD_R"
+    Public Const mnu_Z_BUD_R As String = "mnu_008"
+    Public Const xml_Z_BUD_R As String = "frm_Z_BUD_R.xml"
+
 End Module

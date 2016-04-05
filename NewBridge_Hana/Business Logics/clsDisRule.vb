@@ -314,6 +314,15 @@ Public Class clsDisRule
                                     oApplication.Utilities.SetMatrixValues(oGrid, "U_Z_OcrCode2", sourcerowId, ststring1(2))
                                     oApplication.Utilities.SetMatrixValues(oGrid, "U_Z_OcrCode3", sourcerowId, ststring1(3))
                                     oApplication.Utilities.SetMatrixValues(oGrid, "U_Z_OcrCode4", sourcerowId, ststring1(4))
+                                ElseIf frmSourceForm.TypeEx = frm_Z_OBUDDF Then
+                                    Dim oMatrix As SAPbouiCOM.Matrix
+                                    oMatrix = frmSourceForm.Items.Item(ItemUID).Specific
+                                    oApplication.Utilities.SetMatrixValues(oMatrix, sourceColumID, sourcerowId, stvalue)
+                                    oApplication.Utilities.SetMatrixValues(oMatrix, "V_1", sourcerowId, ststring1(0))
+                                    oApplication.Utilities.SetMatrixValues(oMatrix, "V_2", sourcerowId, ststring1(1))
+                                    oApplication.Utilities.SetMatrixValues(oMatrix, "V_3", sourcerowId, ststring1(2))
+                                    oApplication.Utilities.SetMatrixValues(oMatrix, "V_4", sourcerowId, ststring1(3))
+                                    oApplication.Utilities.SetMatrixValues(oMatrix, "V_5", sourcerowId, ststring1(4))
                                 End If
                                 If frmSourceForm.Mode = SAPbouiCOM.BoFormMode.fm_OK_MODE Then
                                     frmSourceForm.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE
