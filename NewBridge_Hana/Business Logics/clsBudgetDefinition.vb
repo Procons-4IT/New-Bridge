@@ -373,8 +373,12 @@ Public Class clsBudgetDefinition
 
             If oForm.Mode = SAPbouiCOM.BoFormMode.fm_ADD_MODE Then
                 strQuery = "Select ""DocEntry"" from ""@Z_OBUDDF"" where " & _
-                            " And ""U_Year"" = '" & strYear & "' U_Active = 'Y' "
-                oTest.DoQuery(strQuery)
+                            """U_Year"" = '" & strYear & "' and ""U_Active"" = 'Y' "
+                Try
+                    oTest.DoQuery(strQuery)
+                Catch ex As Exception
+
+                End Try
                 If oTest.RecordCount > 0 Then
                     oApplication.Utilities.Message("Budget already defined for the selected year ...", SAPbouiCOM.BoStatusBarMessageType.smt_Error)
                     Return False

@@ -527,6 +527,7 @@ Public NotInheritable Class clsTable
             AddFields("Z_NBOEXP", "Product", "Product", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             AddFields("Z_NBOEXP", "DeptName", "Department Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             addField("@Z_NBOEXP", "TypeofExp", "Expense Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,L", "Personal,LFA", "L")
+            addField("@Z_NBOEXP", "ExpType", "Expense Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,L", "Personal,LFA", "L")
 
             AddTables("Z_NBEXP1", "Expenses Entry Lines", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)
             AddFields("Z_NBEXP1", "ReqDate", "Request Date", SAPbobsCOM.BoFieldTypes.db_Date)
@@ -568,7 +569,7 @@ Public NotInheritable Class clsTable
 
             AddTables("Z_OBUDDF", "Budget Definition", SAPbobsCOM.BoUTBTableType.bott_Document)
             AddFields("Z_OBUDDF", "Year", "Year", SAPbobsCOM.BoFieldTypes.db_Alpha, , 4)
-            'AddFields("Z_OBUDDF", "Category", "Category", SAPbobsCOM.BoFieldTypes.db_Alpha, , 10)
+            AddFields("Z_OBUDDF", "Category", "Category", SAPbobsCOM.BoFieldTypes.db_Alpha, , 10)
             AddFields("Z_OBUDDF", "Remarks", "Remarks", SAPbobsCOM.BoFieldTypes.db_Alpha, , 254)
             addField("Z_OBUDDF", "Active", "Active", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_None, "N,Y", "No,Yes", "Y")
 
