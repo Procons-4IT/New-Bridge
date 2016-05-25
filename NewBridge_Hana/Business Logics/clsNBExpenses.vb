@@ -118,6 +118,16 @@
             oColum.DisplayDesc = True
             oColum.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly
 
+
+            oColum = oMatrix.Columns.Item("V_12")
+            For intRow As Integer = oColum.ValidValues.Count - 1 To 0 Step -1
+                oColum.ValidValues.Remove(intRow, SAPbouiCOM.BoSearchKey.psk_Index)
+            Next
+            oColum.ValidValues.Add("B", "Business Travel")
+            oColum.ValidValues.Add("P", "Purchase Requisition")
+            oColum.DisplayDesc = True
+            oColum.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly
+
             oColum = oMatrix.Columns.Item("SlNo")
             oColum.DataBind.SetBound(True, "", "SlNo")
 
@@ -199,6 +209,14 @@
                     oGeneralData.SetProperty("U_ExpName", oDBDSource.GetValue("U_ExpName", i))
                     oGeneralData.SetProperty("U_CrActCode", oDBDSource.GetValue("U_CrActCode", i))
                     oGeneralData.SetProperty("U_DbActCode", oDBDSource.GetValue("U_DbActCode", i))
+                    oGeneralData.SetProperty("U_GLDesc", oDBDSource.GetValue("U_GLDesc", i))
+                    oGeneralData.SetProperty("U_GLDesc1", oDBDSource.GetValue("U_GLDesc1", i))
+                    ' MsgBox(oDBDSource.GetValue("U_Category", i).Trim)
+                    If oDBDSource.GetValue("U_Category", i).Trim = "" Then
+                        oGeneralData.SetProperty("U_Category", "B")
+                    Else
+                        oGeneralData.SetProperty("U_Category", oDBDSource.GetValue("U_Category", i).Trim)
+                    End If
                     Dim strPosting As String = oDBDSource.GetValue("U_PostType", i)
                     oGeneralData.SetProperty("U_PostType", strPosting.Trim)
                     Dim strstatus As String = oDBDSource.GetValue("U_Active", i)
@@ -415,10 +433,15 @@
                             objMatrix.Columns.Item("V_0").Cells.Item(objMatrix.RowCount).Specific.value = ""
                             objMatrix.Columns.Item("V_3").Cells.Item(objMatrix.RowCount).Specific.value = ""
                             objMatrix.Columns.Item("V_5").Cells.Item(objMatrix.RowCount).Specific.value = ""
+                            objMatrix.Columns.Item("V_10").Cells.Item(objMatrix.RowCount).Specific.value = ""
+                            objMatrix.Columns.Item("V_11").Cells.Item(objMatrix.RowCount).Specific.value = ""
                             oCombobox = objMatrix.Columns.Item("V_6").Cells.Item(objMatrix.RowCount).Specific
                             oCombobox.Select("G", SAPbouiCOM.BoSearchKey.psk_ByValue)
                             oCombobox = objMatrix.Columns.Item("V_1").Cells.Item(objMatrix.RowCount).Specific
                             oCombobox.Select("Y", SAPbouiCOM.BoSearchKey.psk_ByValue)
+
+                            oCombobox = objMatrix.Columns.Item("V_12").Cells.Item(objMatrix.RowCount).Specific
+                            oCombobox.Select("B", SAPbouiCOM.BoSearchKey.psk_ByValue)
                             oApplication.Utilities.AssignSerialNo(objMatrix, oForm)
                             objMatrix.Columns.Item(1).Cells.Item(objMatrix.RowCount).Click(SAPbouiCOM.BoCellClickType.ct_Regular)
                             objForm.Mode = SAPbouiCOM.BoFormMode.fm_OK_MODE
@@ -444,13 +467,17 @@
                                     oForm.Freeze(True)
                                     If pVal.ItemUID = "3" And pVal.ColUID = "V_3" Then
                                         val = oDataTable.GetValue("FormatCode", 0)
+                                        val1 = oDataTable.GetValue("AcctName", 0)
                                         objMatrix = oForm.Items.Item("3").Specific
+                                        oApplication.Utilities.SetMatrixValues(objMatrix, "V_10", pVal.Row, val1)
                                         oApplication.Utilities.SetMatrixValues(objMatrix, "V_3", pVal.Row, val)
                                     End If
                                     oForm.Freeze(False)
                                     If pVal.ItemUID = "3" And pVal.ColUID = "V_5" Then
                                         val = oDataTable.GetValue("FormatCode", 0)
+                                        val1 = oDataTable.GetValue("AcctName", 0)
                                         objMatrix = oForm.Items.Item("3").Specific
+                                        oApplication.Utilities.SetMatrixValues(objMatrix, "V_11", pVal.Row, val1)
                                         oApplication.Utilities.SetMatrixValues(objMatrix, "V_5", pVal.Row, val)
                                     End If
                                     oForm.Freeze(False)

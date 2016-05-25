@@ -475,6 +475,10 @@ Public NotInheritable Class clsTable
             AddFields("Z_NBEXPANCES", "DbActCode", "Debit Account Code", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             addField("@Z_NBEXPANCES", "Active", "Status", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "Y,N", "Yes,No", "Y")
             addField("@Z_NBEXPANCES", "PostType", "Posting Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "B,G", "Business Partners,G/L Account", "B")
+            AddFields("Z_NBEXPANCES", "GLDesc", "GL Credit Description", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
+            AddFields("Z_NBEXPANCES", "GLDesc1", "GL Debit Description", SAPbobsCOM.BoFieldTypes.db_Alpha, , 200)
+            addField("@Z_NBEXPANCES", "Category", "Category", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "B,P", "Business Travel,Purchase Requisition", "B")
+
 
             AddTables("Z_NBOAPPT", "Approval Template", SAPbobsCOM.BoUTBTableType.bott_Document)
             AddTables("Z_NBAPPT1", "Approval Orginator", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)

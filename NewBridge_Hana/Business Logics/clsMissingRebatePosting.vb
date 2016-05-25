@@ -240,7 +240,6 @@
 
             End If
 
-
             strDistRule = oRec.Fields.Item("OcrCode").Value ' & ";" & oRec.Fields.Item("OcrCode2").Value & ";" & oRec.Fields.Item("OcrCode3").Value & ";" & oRec.Fields.Item("OcrCode4").Value & ";" & oRec.Fields.Item("OcrCode5").Value
             strQuery = "Select T0.""ItemCode"",T1.""U_Z_Comm"",T1.""U_Z_MarkReb"",T1.""U_Z_RegStatus"" From OSPP T0 LEFT OUTER JOIN SPP1 T1 On T0.""ItemCode"" = T1.""ItemCode"" And T0.""CardCode"" = T1.""CardCode""  Where T1.""U_Z_OcrCode""='" & strDistRule & "' and T0.""CardCode"" = '" & strCardCode & "' And T0.""ItemCode"" = '" & strItemCode & "' and '" & dtPostingDate.ToString("yyyy-MM-dd") & "' between  ifnull(T1.""FromDate"",NOW()) and ifnull(T1.""ToDate"",NOW())"
             otest1.DoQuery(strQuery)
