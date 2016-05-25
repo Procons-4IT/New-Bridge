@@ -532,6 +532,7 @@ Public NotInheritable Class clsTable
             AddFields("Z_NBOEXP", "DeptName", "Department Name", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
             addField("@Z_NBOEXP", "TypeofExp", "Expense Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,L", "Personal,LFA", "L")
             addField("@Z_NBOEXP", "ExpType", "Expense Type", SAPbobsCOM.BoFieldTypes.db_Alpha, 1, SAPbobsCOM.BoFldSubTypes.st_Address, "P,L", "Personal,LFA", "L")
+            AddFields("Z_NBOEXP", "AppStatus", "Approver Status", SAPbobsCOM.BoFieldTypes.db_Alpha, , 40)
 
             AddTables("Z_NBEXP1", "Expenses Entry Lines", SAPbobsCOM.BoUTBTableType.bott_DocumentLines)
             AddFields("Z_NBEXP1", "ReqDate", "Request Date", SAPbobsCOM.BoFieldTypes.db_Date)

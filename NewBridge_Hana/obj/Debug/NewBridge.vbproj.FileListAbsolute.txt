@@ -305,3 +305,18 @@ F:\Internation Projects 2016\Procons4it\New Bridge\HANA\20160425New Bridge 1.0.2
 F:\Internation Projects 2016\Procons4it\New Bridge\HANA\20160425New Bridge 1.0.20\NewBridge_Hana\bin\Debug\Interop.Scripting.dll
 F:\Internation Projects 2016\Procons4it\New Bridge\HANA\20160425New Bridge 1.0.20\NewBridge_Hana\obj\Debug\NewBridge.Resources.resources
 F:\Internation Projects 2016\Procons4it\New Bridge\HANA\20160425New Bridge 1.0.20\NewBridge_Hana\obj\Debug\NewBridge.vbproj.GenerateResource.Cache
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\Interop.SAPbobsCOM.dll
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\Interop.SAPbouiCOM.dll
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\Interop.Scripting.dll
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\NewBridge.vbproj.ResolveComReference.cache
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\NewBridge.xml
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\NewBridge.pdb
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\bin\Debug\NewBridge.exe
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\bin\Debug\NewBridge.pdb
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\bin\Debug\NewBridge.xml
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\bin\Debug\Interop.SAPbobsCOM.dll
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\bin\Debug\Interop.SAPbouiCOM.dll
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\bin\Debug\Interop.Scripting.dll
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\NewBridge.Resources.resources
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\NewBridge.vbproj.GenerateResource.Cache
+C:\Procons Projects\20160525 New Bridge 1.0.21\NewBridge_Hana\obj\Debug\NewBridge.exe
