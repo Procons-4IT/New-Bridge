@@ -30,6 +30,7 @@
             oCombobox.DataBind.SetBound(True, "", "Choice")
             oCombobox.ValidValues.Add("I", "Invoice")
             oCombobox.ValidValues.Add("C", "Credit Note")
+            oCombobox.ValidValues.Add("P", "AP Invoice")
             oCombobox.Select("I", SAPbouiCOM.BoSearchKey.psk_ByValue)
             oCombobox.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly
 
@@ -114,7 +115,7 @@
             oGrid = aForm.Items.Item("9").Specific
             '  oCheckbox = oGrid.Columns.Item("Select")
             oApplication.Utilities.Message("Processing....", SAPbouiCOM.BoStatusBarMessageType.smt_Warning)
-            If strChoice = "I" Then
+            If strChoice = "I" Then 'Invoice
                 Dim oobj As SAPbobsCOM.Documents
                 oobj = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oInvoices)
                 For intRow As Integer = 0 To oGrid.DataTable.Rows.Count - 1
@@ -134,7 +135,26 @@
                     End If
                 Next
             End If
-            If strChoice = "C" Then
+
+            If strChoice = "P" Then 'AP Invoice
+                Dim oobj As SAPbobsCOM.Documents
+                oobj = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseInvoices)
+                For intRow As Integer = 0 To oGrid.DataTable.Rows.Count - 1
+                    If 1 = 1 Then ' oCheckbox.IsChecked(intRow) = True Then
+                        aKey = oGrid.DataTable.GetValue("InternalKey", intRow)
+                        If oobj.GetByKey(aKey) Then
+                            If oobj.DocType = SAPbobsCOM.BoDocumentTypes.dDocument_Items Then
+                                 If oobj.Cancelled = SAPbobsCOM.BoYesNoEnum.tYES Then
+                                    CancelAPInvoice_Purchase(oobj.DocEntry)
+                                Else
+                                    CreditAPCreditNote_APInvoice(oobj.DocEntry)
+                                End If
+                            End If
+                        End If
+                    End If
+                Next
+            End If
+            If strChoice = "C" Then 'AR Credit Note
                 Dim oobj As SAPbobsCOM.Documents
                 oobj = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oCreditNotes)
                 For intRow As Integer = 0 To oGrid.DataTable.Rows.Count - 1
@@ -162,7 +182,230 @@
             oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
         End Try
     End Sub
+    Public Function CancelAPInvoice_Purchase(ByVal DocNum As String) As Boolean
+        Dim oAPInv, oAPInv2 As SAPbobsCOM.Documents
+        Dim oAPInv1 As SAPbobsCOM.Documents
+        Dim oTest, otest1, oRec, oTemp1, oTest2 As SAPbobsCOM.Recordset
+        oTest = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        otest1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        oRec = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        oTemp1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        oAPInv = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseInvoices)
+        oAPInv2 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseCreditNotes)
+        oAPInv1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseCreditNotes)
+        Try
+            '  ApplyRebateAmount(DocNum)
+            strQuery = "Select * from OPCH where ""DocEntry""=" & DocNum & ""
+            oTest.DoQuery(strQuery)
+            If oTest.RecordCount > 0 Then
+                If oTest.Fields.Item("U_Z_BaseEntry").Value <> "" Then
+                    oRec.DoQuery("Select * from ORPC where ""DocEntry""=" & oTest.Fields.Item("U_Z_BaseEntry").Value)
+                    If oRec.RecordCount <= 0 Then
+                        Return True
+                    Else
+                        '  MsgBox(oRec.Fields.Item("DocEntry").Value)
+                    End If
+                    If oAPInv2.GetByKey(oRec.Fields.Item("DocEntry").Value) Then
+                        If oAPInv2.DocumentStatus = SAPbobsCOM.BoStatus.bost_Open Then
+                            oAPInv1 = oAPInv2.CreateCancellationDocument()
+                            If oAPInv1.Add() <> 0 Then
+                                oApplication.Utilities.Message(oApplication.Company.GetLastErrorDescription, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                                Return False
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+            Return True
+        Catch ex As Exception
+            oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+        End Try
+    End Function
+    Public Function CreditAPCreditNote_APInvoice(ByVal DocNum As String) As Boolean
+        Dim oAPInv, oAPInv2 As SAPbobsCOM.Documents
+        Dim oAPInv1 As SAPbobsCOM.Documents
+        Dim oTest, otest1, oRec, oTemp1, oTest2 As SAPbobsCOM.Recordset
+        oTest = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        otest1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        oRec = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        oTemp1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+        oAPInv = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseInvoices)
+        oAPInv2 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseInvoices)
+        oAPInv1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseCreditNotes)
+        Try
+            '  ApplyRebateAmount(DocNum)
+            strQuery = "Select * from OPCH where ""DocEntry""=" & DocNum & ""
+            oTest.DoQuery(strQuery)
+            If oTest.RecordCount > 0 Then
+                If 1 = 2 Then 'oTest.Fields.Item("U_Z_BaseEntry").Value <> "" Then
+                    oRec.DoQuery("Select * from ORPC where ""DocEntry""=" & oTest.Fields.Item("U_Z_BaseEntry").Value)
+                    If oRec.RecordCount <= 0 Then
+                        Return True
+                    Else
+                        '  MsgBox(oRec.Fields.Item("DocEntry").Value)
+                    End If
+                    If oAPInv.GetByKey(oRec.Fields.Item("DocEntry").Value) Then
+                        If oAPInv.DocumentStatus = SAPbobsCOM.BoStatus.bost_Open Then
+                            oAPInv2 = oAPInv.CreateCancellationDocument()
+                            If oAPInv2.Add() <> 0 Then
+                                oApplication.Utilities.Message(oApplication.Company.GetLastErrorDescription, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                                Return False
+                            End If
+                        Else
+                            oAPInv1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseCreditNotes)
+                            Dim oWhs As SAPbobsCOM.Warehouses
+                            Dim OItem As SAPbobsCOM.Items
+                            oWhs = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oWarehouses)
+                            OItem = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oItems)
+                            oAPInv1.DocDate = oTest.Fields.Item("DocDate").Value
+                            oAPInv1.DocDueDate = oTest.Fields.Item("DocDueDate").Value
+                            oAPInv1.CardCode = oAPInv.CardCode
+                            oAPInv1.UserFields.Fields.Item("U_Z_ARInvoice").Value = oTest.Fields.Item("DocNum").Value.ToString
+                            oAPInv1.UserFields.Fields.Item("U_Z_BaseEntry").Value = DocNum
+                            oAPInv1.Comments = "Supplier Rebate Posting - Based on A/P Invoice  : " & oTest.Fields.Item("DocNum").Value.ToString
+                            oAPInv1.DocType = SAPbobsCOM.BoDocumentTypes.dDocument_Items
+                            Dim intLineCount As Integer = 0
+                            Dim dblUnitPrice, dblPercentage As Double
+                            Dim blnlineExist As Boolean = False
+                            For intLoop As Integer = 0 To oAPInv.Lines.Count - 1
+                                oAPInv.Lines.SetCurrentLine(intLoop)
+                                If oWhs.GetByKey(oAPInv.Lines.WarehouseCode) Then
+                                    If oWhs.UserFields.Fields.Item("U_Z_Type").Value = "D" And oWhs.UserFields.Fields.Item("U_Z_PWhs").Value <> "" And oAPInv.Lines.UserFields.Fields.Item("U_Z_Rebate").Value > 0 Then
+                                        If intLineCount > 0 Then
+                                            oAPInv1.Lines.Add()
+                                            oAPInv1.Lines.SetCurrentLine(intLineCount)
+                                        End If
+                                        oAPInv1.Lines.ItemCode = oAPInv.Lines.AccountCode
+                                        oAPInv1.Lines.ItemDescription = oAPInv.Lines.ItemDescription
+                                        dblPercentage = oAPInv.Lines.UserFields.Fields.Item("U_Z_RebValue").Value
 
+                                        oAPInv1.Lines.Currency = oAPInv.Lines.Currency
+                                        oAPInv1.Lines.UnitPrice = oAPInv.Lines.UnitPrice
+                                        oAPInv1.Lines.Quantity = oAPInv.Lines.Quantity
+                                        oAPInv1.Lines.WithoutInventoryMovement = SAPbobsCOM.BoYesNoEnum.tYES
+                                        oAPInv1.Lines.WarehouseCode = oWhs.UserFields.Fields.Item("U_Z_PWhs").Value
+                                        If oAPInv.Lines.RowTotalFC > 0 Then
+                                            dblUnitPrice = oAPInv.Lines.RowTotalFC
+                                            dblUnitPrice = (dblUnitPrice) - (dblUnitPrice * dblPercentage / 100)
+                                            oAPInv1.Lines.RowTotalFC = dblUnitPrice
+                                        Else
+                                            dblUnitPrice = oAPInv.Lines.LineTotal
+                                            dblUnitPrice = (dblUnitPrice) - (dblUnitPrice * dblPercentage / 100)
+                                            oAPInv1.Lines.LineTotal = dblUnitPrice
+                                        End If
+
+                                        'oAPInv1.Lines.BaseType = SAPbobsCOM.BoObjectTypes.oPurchaseInvoices
+                                        'oAPInv1.Lines.BaseEntry = oAPInv.DocEntry
+                                        'oAPInv1.Lines.BaseLine = oAPInv.Lines.LineNum
+                                        blnlineExist = True
+                                        intLineCount = intLineCount + 1
+                                    End If
+                                End If
+
+                            Next
+                            If blnlineExist = True Then
+                                If oAPInv1.Add <> 0 Then
+                                    oApplication.Utilities.Message(oApplication.Company.GetLastErrorDescription, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                                    Return False
+                                Else
+                                    oTest2 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+                                    Dim strDocNum As String
+                                    oApplication.Company.GetNewObjectCode(strDocNum)
+                                    oAPInv1.GetByKey(CInt(strDocNum))
+                                    strDocNum = oAPInv1.DocNum
+                                    strQuery = "Update OPCH set ""U_Z_BaseEntry""='" & oAPInv1.DocEntry.ToString & "', ""U_Z_APInvoice""='" & strDocNum & "' where ""DocEntry""=" & DocNum
+                                    oTest2.DoQuery(strQuery)
+                                End If
+                            End If
+                        End If
+                    End If
+                Else
+                    If 1 = 1 Then ' oAPInv.GetByKey(oRec.Fields.Item("DocEntry").Value) Then
+                        If 1 = 2 Then ' oAPInv.DocumentStatus = SAPbobsCOM.BoStatus.bost_Open Then
+                            oAPInv2 = oAPInv.CreateCancellationDocument()
+                            If oAPInv2.Add() <> 0 Then
+                                oApplication.Utilities.Message(oApplication.Company.GetLastErrorDescription, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                                Return False
+                            End If
+                        Else
+                            oAPInv.GetByKey(DocNum)
+                            oAPInv1 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseCreditNotes)
+                            Dim oWhs As SAPbobsCOM.Warehouses
+                            Dim OItem As SAPbobsCOM.Items
+                            oWhs = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oWarehouses)
+                            OItem = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oItems)
+                            oAPInv1.DocDate = oAPInv.DocDate
+                            oAPInv1.DocDueDate = oAPInv.DocDueDate
+                            oAPInv1.CardCode = oAPInv.CardCode
+                            oAPInv1.UserFields.Fields.Item("U_Z_ARInvoice").Value = oAPInv.DocNum.ToString
+                            oAPInv1.UserFields.Fields.Item("U_Z_BaseEntry").Value = DocNum
+                            oAPInv1.Comments = "Supplier Rebate Posting - Based on A/P Invoice  : " & oAPInv.DocNum.ToString
+                            oAPInv1.DocType = SAPbobsCOM.BoDocumentTypes.dDocument_Items
+                            Dim intLineCount As Integer = 0
+                            Dim dblUnitPrice, dblPercentage As Double
+                            Dim blnlineExist As Boolean = False
+                            For intLoop As Integer = 0 To oAPInv.Lines.Count - 1
+                                oAPInv.Lines.SetCurrentLine(intLoop)
+                                ' MsgBox(oAPInv.Lines.WarehouseCode)
+                                If oWhs.GetByKey(oAPInv.Lines.WarehouseCode) Then
+                                    ' If oWhs.UserFields.Fields.Item("U_Z_Type").Value = "D" And oWhs.UserFields.Fields.Item("U_Z_PWhs").Value <> "" And oAPInv.Lines.UserFields.Fields.Item("U_Z_Rebate").Value > 0 Then
+                                    If oWhs.UserFields.Fields.Item("U_Z_Type").Value = "D" And oAPInv.Lines.UserFields.Fields.Item("U_Z_Rebate").Value > 0 Then
+                                        If intLineCount > 0 Then
+                                            oAPInv1.Lines.Add()
+                                            oAPInv1.Lines.SetCurrentLine(intLineCount)
+                                        End If
+                                        oAPInv1.Lines.ItemCode = oAPInv.Lines.ItemCode
+                                        oAPInv1.Lines.ItemDescription = oAPInv.Lines.ItemDescription
+                                        dblUnitPrice = oAPInv.Lines.UnitPrice
+                                        dblPercentage = oAPInv.Lines.UserFields.Fields.Item("U_Z_Rebate").Value
+                                        oAPInv1.Lines.Currency = oAPInv.Lines.Currency
+                                        '     oAPInv1.Lines.UnitPrice = oAPInv.Lines.UnitPrice
+                                        oAPInv1.Lines.Quantity = oAPInv.Lines.Quantity
+                                        oAPInv1.Lines.WithoutInventoryMovement = SAPbobsCOM.BoYesNoEnum.tYES
+                                        oAPInv1.Lines.WarehouseCode = oAPInv.Lines.WarehouseCode
+                                        If oAPInv.Lines.RowTotalFC > 0 Then
+                                            dblUnitPrice = oAPInv.Lines.RowTotalFC
+                                            dblUnitPrice = (dblUnitPrice) - (dblUnitPrice * dblPercentage / 100)
+                                            oAPInv1.Lines.RowTotalFC = dblUnitPrice
+                                            oAPInv1.Lines.UnitPrice = dblUnitPrice / oAPInv.Lines.Quantity
+                                        Else
+                                            dblUnitPrice = oAPInv.Lines.LineTotal
+                                            dblUnitPrice = (dblUnitPrice) - (dblUnitPrice * dblPercentage / 100)
+                                            oAPInv1.Lines.LineTotal = dblUnitPrice
+                                            oAPInv1.Lines.UnitPrice = dblUnitPrice / oAPInv.Lines.Quantity
+                                        End If
+                                        oAPInv1.Lines.BaseType = SAPbobsCOM.BoObjectTypes.oPurchaseInvoices
+                                        oAPInv1.Lines.BaseEntry = oAPInv.DocEntry
+                                        oAPInv1.Lines.BaseLine = oAPInv.Lines.LineNum
+                                        blnlineExist = True
+                                        intLineCount = intLineCount + 1
+                                    End If
+                                End If
+                            Next
+                            If blnlineExist = True Then
+                                If oAPInv1.Add <> 0 Then
+                                    oApplication.Utilities.Message(oApplication.Company.GetLastErrorDescription, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                                    Return False
+                                Else
+                                    oTest2 = oApplication.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+                                    Dim strDocNum As String
+                                    oApplication.Company.GetNewObjectCode(strDocNum)
+                                    oAPInv1.GetByKey(CInt(strDocNum))
+                                    strDocNum = oAPInv1.DocNum
+                                    strQuery = "Update OPCH set ""U_Z_BaseEntry""='" & oAPInv1.DocEntry.ToString & "', ""U_Z_APInvoice""='" & strDocNum & "' where ""DocEntry""=" & DocNum
+                                    oTest2.DoQuery(strQuery)
+                                End If
+                            End If
+                        End If
+                    End If
+
+                End If
+                Return True
+            End If
+        Catch ex As Exception
+            oApplication.Utilities.Message(ex.Message, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+        End Try
+    End Function
     Public Sub FormDataEvent(ByRef BusinessObjectInfo As SAPbouiCOM.BusinessObjectInfo, ByRef BubbleEvent As Boolean)
         Try
             If BusinessObjectInfo.BeforeAction = False And BusinessObjectInfo.ActionSuccess = True And BusinessObjectInfo.EventType = SAPbouiCOM.BoEventTypes.et_FORM_DATA_ADD Then
@@ -513,6 +756,8 @@
             If oApplication.Company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
                 If strChoice = "I" Then
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OINV T0 where T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
+                ElseIf strChoice = "P" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OPCH T0 where T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
 
                 Else
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from ORIN T0 where  T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
@@ -521,6 +766,8 @@
             Else
                 If strChoice = "I" Then
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OINV T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
+                ElseIf strChoice = "P" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from OPCH T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
 
                 Else
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date"" ,'Y' ""Select"" from ORIN T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
@@ -533,18 +780,18 @@
             If oApplication.Company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB Then
                 If strChoice = "I" Then
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from OINV T0 where T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
-
+                ElseIf strChoice = "P" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""   from OPCH T0 where T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
                 Else
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from ORIN T0 where  T0.""DocType""='I' and " & strcondition & " and ifnull(T0.""U_Z_APInvoice"",'')=''"
-
                 End If
             Else
                 If strChoice = "I" Then
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from OINV T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
-
+                ElseIf strChoice = "P" Then
+                    strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""   from OPCH T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
                 Else
                     strSQL = "Select T0.""DocEntry"" ""InternalKey"",T0.""DocNum"" ""Document Number"",T0.""CardCode"" ""Customer Code"", T0.""CardName"" ""Customer Name"",T0.""DocDate"" ""Document Date""  from ORIN T0 where T0.""DocType""='I' and " & strcondition & " and isnull(T0.""U_Z_APInvoice"",'')=''"
-
                 End If
             End If
            
@@ -556,7 +803,10 @@
             oEditTextColumn = oGrid.Columns.Item(0)
             If strChoice = "I" Then
                 oEditTextColumn.LinkedObjectType = SAPbouiCOM.BoLinkedObject.lf_Invoice
+            ElseIf strChoice = "P" Then
+                oEditTextColumn.LinkedObjectType = SAPbouiCOM.BoLinkedObject.lf_PurchaseInvoice
             Else
+
                 oEditTextColumn.LinkedObjectType = SAPbouiCOM.BoLinkedObject.lf_InvoiceCreditMemo
             End If
 
